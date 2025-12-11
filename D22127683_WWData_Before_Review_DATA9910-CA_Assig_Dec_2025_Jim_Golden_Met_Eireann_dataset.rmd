@@ -1,0 +1,620 @@
+---
+title: "TU256 Working With Data DATA9910"
+subtitle: "Assignment Specification Continuous Assessment"
+author: "Lucas Rizzo" 
+student: "Jim Golden D22127683"
+output:
+  html:
+    self-contained: true
+    code-fold: true
+    code-tools: true
+    toc: true
+editor: source
+---
+
+1. Brainstorming and Overcoming "Mental Fog" for Clarity and Readability:
+
+•	How I used it: When experiencing mental fog or fatigue, which made it difficult to articulate my own ideas clearly, I used AI as a brainstorming partner and a clarity tool. I would provide my rough notes or core ideas and ask the AI to "help me brainstorm different ways to explain this" or "rephrase these jumbled thoughts into a clear, academic sentence."
+
+•	Purpose and Outcome: This was an invaluable strategy to work through frustrating barriers and maintain productivity. It helped me translate my understanding into coherent prose when I was otherwise struggling. The fundamental ideas and analysis remained entirely my own; the AI assisted in overcoming the specific hurdle of articulation during difficult moments.
+
+2. Checking Grammar, Spelling, and Formatting:
+
+•	How I used it: I used AI as a comprehensive proofreader to check my work for grammatical errors, spelling mistakes, and consistent formatting.
+
+•	Purpose and Outcome: This ensured the technical quality and professionalism of my submission, serving as a reliable final check that reduced the cognitive load associated with meticulous editing, especially when tired.
+
+3. Generating Ideas for How to Present or Visualise Data:
+
+•	How I used it: I described my data and the story I wanted to tell to the AI and asked for visualization suggestions. For instance, "What are the best charts to compare averages between three groups?"
+
+•	Purpose and Outcome: The AI provided a menu of potential options, which I then evaluated. I selected the most appropriate chart and created the final visualisation myself using software like Excel or R. The AI helped with the initial creative impulse, but the execution and analytical choice were mine.
+
+Declaration of Final Authorship and Context:
+
+It is crucial to state that the core intellectual work of this assignment is my own. This includes forming the research question, conducting the analysis, interpreting the results, and drawing original conclusions.
+
+The use of AI was a tool to mitigate the impact of my disability on the process of writing and editing, not a means to generate content. It helped me bridge the gap between my knowledge and my ability to express it consistently under challenge. Every piece of AI-generated output was critically assessed, heavily edited, and integrated into my own original work stream.
+
+
+# Set root directory
+```{r}
+# In a setup chunk at the beginning
+knitr::opts_knit$set(root.dir = "C:/Users/jimgo/OneDrive/Documents/Academic/TU256/Working with Data/2025_course/Assignment/")
+save_plot <- function(plot, filename, width = 10, height = 6) {
+  ggsave(filename, plot, width = width, height = height, dpi = 300)
+  cat("Saved:", filename, "\n")
+}
+```
+ 
+# 1. The Weather dataset and its challenges
+
+Met Éireann, Ireland's national meteorological service, employs a rigorous and standardized methodology for data collection at its synoptic weather stations to ensure accuracy, consistency, and international comparability. This process, which governs stations like Dublin Airport (Station Number: 03969), adheres strictly to World Meteorological Organization (WMO) standards and can be summarized in three key areas:
+
+1. Instrumentation and Siting
+Instruments are located within a dedicated "Met Site" or "Instrument Enclosure" at Dublin Airport. This open area is strategically chosen to be representative of the region and free from obstructions like buildings or trees that could distort measurements. Specific instrumentation includes:
+
+Temperature and Humidity: Electronic sensors housed in a Stevenson Screen, a white-louvered box that ensures accurate readings by protecting instruments from direct solar radiation while allowing air circulation. Sensors are positioned at the standard height of 1.25 meters.
+
+Wind: An anemometer and wind vane mounted on a mast at 10 meters.
+
+Precipitation: A rain gauge set level with the ground to collect rainfall; modern stations typically use automated tipping-bucket gauges.
+
+Pressure: A barometer, often housed indoors in a stable environment since air pressure is less affected by local siting.
+
+2. Observation and Reporting
+As a principal manned synoptic station, Dublin Airport integrates multiple data sources:
+
+Automated Sensors: Provide continuous in-situ measurements of parameters like temperature, wind, and rainfall.
+
+Human Observations: Trained meteorologists record visual phenomena such as cloud types, visibility, and present weather.
+
+3. Data Quality and Archiving
+All data undergoes automated and manual quality control checks before being archived. This rigorous process guarantees the reliability of the data for weather forecasting, climate monitoring, and the creation of homogeneous long-term records.
+
+The dataset has daily records from 1945 to today across a number of weather features, but that were originally collected by hand, but this process is now automated with the data sets conforming to World and European global standards. 
+
+# Install and load packages
+```{r}
+#| label: install-and-load
+#| message: false
+#| warning: false
+
+quiet_library <- function(pkg) {
+  suppressMessages(suppressWarnings({
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      install.packages(pkg, quiet = TRUE)
+    }
+    library(pkg, character.only = TRUE)
+  }))
+}
+
+quiet_library("tidyverse")  # Collection of R packages (dplyr, ggplot2, tidyr, etc.) for data wrangling, visualization, and analysis
+quiet_library("ggplot2")  #
+quiet_library("knitr")  #
+quiet_library("readr")  #
+quiet_library("DataExplorer")  #
+quiet_library("lubridate")  #
+quiet_library("reshape2")  #
+quiet_library("dplyr")  #
+quiet_library("gridExtra")  #
+quiet_library("moments")  #
+quiet_library("corrplot")  #
+quiet_library("patchwork")  #  
+quiet_library("grid")  #  
+
+ 
+```
+
+# 2. Load the Data 
+```{r}
+
+
+# Create a vector of column classes
+
+column_names <- read.csv("dly532_column_headings.csv",
+                         stringsAsFactors = FALSE)
+
+
+df <- read.csv("dly532_third_millennium.csv",
+                         stringsAsFactors = FALSE)
+
+
+# Convert date
+df$date <- as.Date(df$date, format = "%d-%b-%Y")
+
+```
+
+2.  Dataset description
+
+EUMETNET is a collaborative network comprising 33 European National Meteorological Services and was established to foster cooperation in various areas of meteorology. This alliance provides a framework for organising joint programmes among its members that support their fundamental activities by providing collective observation systems, data exchange and processing capabilities, basic forecasting products, research and development, professional training support, and effective exchange of knowledge and experiences.
+
+The have a comprehensive data set available at European level of which Met Eireannn is a member. 
+
+
+in the remainder of this report, Section 2 describes the dataset used for the analysis, including  variable descriptions, and data preparation steps. This details identification and importing of data and perform any cleaning and merging to produce a final dataframe. Explain the steps necessary to clean the data and justify any decisions taken. For the final dataframe, what is the meaning of each row?statistical methods. 
+
+Section 3 presents the Carry out a general exploration of this dataframe to develop an overall understanding of the data. You can perform single/multivariate analysis with summary statistics and relevant visualisations. Explain and discuss any values and/or visualisation reported. Discussion of  any expected/unexpected results?
+
+Section 4 will focus on a particular subset of the dataframe and drill down into it extracting details to answer a series of questions that are of interest to you as an analyst. Ideally the motivation for such questions would be framed within the context of a hypothetical use case scenario.
+
+
+
+
+# Exploration & Cleaning
+```{r}
+# Display basic information
+cat("=== DATASET OVERVIEW ===\n")
+cat(paste("Shape:", dim(df), "\n"))
+cat(paste("Date range:", min(df$date), "to", max(df$date), "\n"))
+cat(paste("Total days:", nrow(df), "\n"))
+cat(paste("Approximate years:", round(nrow(df)/365, 1), "\n"))
+
+cat("\n=== DATA STRUCTURE ===\n")
+str(df)
+
+cat("\n=== MISSING VALUES ===\n")
+missing_summary <- df %>%
+  summarise_all(~sum(is.na(.))) %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Missing_Count") %>%
+  filter(Missing_Count > 0)
+print(missing_summary)
+
+
+
+# Summaries Data with Descriptive Statistics and Check for missing Values
+
+# Display initial structure
+cat("Initial data structure:\n")
+str(df)
+cat("Dimensions:\n")
+dim(df)          # Data dimensions
+cat("Summary Statistics:\n")
+summary(df)
+
+missing_summary <- df %>%
+  summarise(across(everything(), ~sum(is.na(.)))) %>%
+  pivot_longer(everything(), names_to = "Column", values_to = "Missing_Count") %>%
+  filter(Missing_Count > 0) %>%
+  mutate(Missing_Percent = round((Missing_Count / nrow(df)) * 100, 2))
+
+if (nrow(missing_summary) > 0) {
+  cat("We do have missing values:\n")
+  print(missing_summary, row.names = FALSE)
+} else {
+  cat("No missing values found in the dataset!\n")
+}
+
+print("\nNumber of Duplicate rows : ")
+sum(duplicated(df))
+
+# For numerical variables
+print("\nDetailed Numerical Summary : ")
+df %>% select(where(is.numeric)) %>% summary()
+
+summary(df)
+# Check for missing values
+colSums(is.na(df))
+
+# Handle missing values appropriately (e.g., for temps, you might interpolate small gaps; for rain, leave as NA or set to 0)
+df <- df %>% mutate(rain = replace_na(rain, 0)) # Only if confirmed no rain gauge failure
+
+# Ensure correct data types, parse dates
+df <- df %>% mutate(date = ymd(date))
+
+# Create useful derived columns
+df <- df %>%
+  mutate(year = year(date),
+         month = month(date, label = TRUE),
+         season = case_when(
+           month %in% c(12, 1, 2) ~ "Winter",
+           month %in% c(3, 4, 5) ~ "Spring",
+           month %in% c(6, 7, 8) ~ "Summer",
+           month %in% c(9, 10, 11) ~ "Autumn"
+         ),
+         season = factor(season, levels = c("Winter", "Spring", "Summer", "Autumn")))
+
+# Check for duplicates
+cat(paste("\nDuplicate dates:", sum(duplicated(df$date)), "\n"))
+
+
+```
+I see a few NA's; mintp -	Minimum__Air_Temperature_'C', sun - Sunshine_duration_'hours' and evap - Evaporation_'mm'. There are no duplicate rows.						"
+
+```{r}
+# Explore EDA
+
+
+plot_intro(df)
+plot_missing(df)
+plot_histogram(df)
+plot_correlation(df)
+
+
+
+# Histogram for Maximum Air Temperature (C)
+p1 <- ggplot(df, aes(x = maxtp)) +
+  geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7, color = "white") +
+  labs(title = "Distribution of Maximum Temp (maxtp)",
+       x = "Maximum Temperature", y = "Frequency") +
+  theme_minimal()
+
+# Histogram for Minimum Temperature (mintp)
+p2 <- ggplot(df, aes(x = mintp)) +
+  geom_histogram(bins = 30, fill = "coral", alpha = 0.7, color = "white") +
+  labs(title = "Distribution of Minimum Temp (mintp)",
+       x = "Minimum Temperature", y = "Frequency") +
+  theme_minimal()
+
+# Histogram for rain
+p3 <- ggplot(df, aes(x = rain)) +
+  geom_histogram(bins = 30, fill = "lightblue", alpha = 0.7, color = "white") +
+  labs(title = "Distribution of Rainfall (rain mm)",
+       x = "Rainfall", y = "Frequency") +
+  theme_minimal()
+
+# Histogram for Mean Wind Speed (knot) 
+p4 <- ggplot(df, aes(x = wdsp)) +
+  geom_histogram(bins = 30, fill = "lightgreen", alpha = 0.7, color = "white") +
+  labs(title = "Distribution of Wind Speed (wdsp knot)",
+       x = "Wind Speed", y = "Frequency") +
+  theme_minimal()
+
+(p1 + p2) / (p3 + p4)  # Arranges in a 2x2 grid
+
+# Boxplot for Maximum Air Temperature (C)
+b1 <- ggplot(df, aes(y = maxtp)) +
+  geom_boxplot(fill = "steelblue", alpha = 0.7) +
+  labs(title = "Boxplot of Maximum Temperature (maxtp)",
+       y = "Maximum Temp") +
+  theme_minimal()
+
+# Boxplot for Minimum Temperature (mintp)
+b2 <- ggplot(df, aes(y = mintp)) +
+  geom_boxplot(fill = "coral", alpha = 0.7) +
+  labs(title = "Boxplot of Minimum Temperature (mintp)",
+       y = "Minimum Temp") +
+  theme_minimal()
+
+# Boxplot for rain
+b3 <- ggplot(df, aes(y = rain)) +
+  geom_boxplot(fill = "lightblue", alpha = 0.7) +
+  labs(title = "Boxplot of Rainfall (rain)",
+       y = "Rainfall") +
+  theme_minimal()
+
+# Boxplot for Wind Speed (wdsp)
+b4 <- ggplot(df, aes(y = wdsp)) +
+  geom_boxplot(fill = "lightgreen", alpha = 0.7) +
+  labs(title = "Boxplot of Wind Speed (wdsp)",
+       y = "Wind Speed") +
+  theme_minimal()
+
+(b1 + b2) / (b3 + b4)  # Arranges in a 2x2 grid
+
+# Density plot for Maximum Temperature (maxtp)
+d1 <- ggplot(df, aes(x = maxtp)) +
+  geom_density(fill = "steelblue", alpha = 0.7, color = "darkblue") +
+  labs(title = "Density of Maximum Temperature (maxtp)",
+       x = "Maximum Temp", y = "Density") +
+  theme_minimal()
+
+# Density plot for Minimum Temperature (mintp)
+d2 <- ggplot(df, aes(x = mintp)) +
+  geom_density(fill = "coral", alpha = 0.7, color = "darkred") +
+  labs(title = "Density of Minimum Temperature (mintp)",
+       x = "Minimum Temp", y = "Density") +
+  theme_minimal()
+
+# Density plot for rain
+d3 <- ggplot(df, aes(x = rain)) +
+  geom_density(fill = "lightblue", alpha = 0.7, color = "darkblue") +
+  labs(title = "Density of Rainfall (rain)",
+       x = "Rainfall", y = "Density") +
+  theme_minimal()
+
+# Density plot for Wind Speed (wdsp)
+d4 <- ggplot(df, aes(x = wdsp)) +
+  geom_density(fill = "lightgreen", alpha = 0.7, color = "darkgreen") +
+  labs(title = "Density of Wind Speed (wdsp)",
+       x = "Wind Speed", y = "Density") +
+  theme_minimal()
+
+(d1 + d2) / (d3 + d4)  # Arranges in a 2x2 grid
+  
+```
+
+
+Annual Temperature Trend
+```{r}
+cat("\n=== TEMPORAL ANALYSIS ===\n")
+
+# Calculate annual mean temperature first
+annual_means <- df %>%
+  group_by(year) %>%
+  summarise(mean_temp = mean(maxtp, na.rm = TRUE), .groups = 'drop')
+ggplot(annual_means, aes(x = year, y = mean_temp)) +
+  geom_line(color = "steelblue", size = 1) +
+  geom_smooth(method = "lm", se = FALSE, color = "red", linetype = "dashed") +
+  labs(title = "Trend in Annual Mean Maximum Temperature, Dublin Airport",
+       subtitle = "Data Source: Met Éireann Synoptic Station",
+       x = "Year",
+       y = "Mean Max Temperature (°C)") +
+  theme_minimal()
+
+ggplot(df, aes(x = season, y = maxtp, fill = season)) +
+  geom_boxplot() +
+  labs(title = "Distribution of Daily Max Temperature by Season",
+       x = "Season",
+       y = "Max Temperature (°C)") +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+annual_summary <- df %>%
+  group_by(year) %>%
+  summarise(
+    mean_maxtp = mean(maxtp, na.rm = TRUE),
+    mean_mintp = mean(mintp, na.rm = TRUE),
+    total_rain = sum(rain, na.rm = TRUE),
+    mean_sun = mean(sun, na.rm = TRUE),
+    days_above_20c = sum(maxtp > 20, na.rm = TRUE),
+    .groups = 'drop'
+  )
+
+# Linear trend for annotation
+trend_model <- lm(mean_maxtp ~ year, data = annual_summary)
+trend_slope <- coef(trend_model)[2]
+trend_p <- summary(trend_model)$coefficients[2,4]
+
+# Plot 1: Temperature trend with rolling average
+p1 <- ggplot(annual_summary, aes(x = year, y = mean_maxtp)) +
+  geom_line(color = "gray70", alpha = 0.7) +
+  geom_smooth(method = "loess", span = 0.3, color = "#D55E00", 
+              fill = "#E69F00", alpha = 0.2) +
+  geom_point(aes(color = mean_maxtp), size = 2) +
+  scale_color_gradient2(low = "blue", mid = "green", high = "red",
+                       midpoint = median(annual_summary$mean_maxtp)) +
+  labs(
+    title = "Trend in Annual Mean Maximum Temperature (1970-2023)",
+    subtitle = paste0("Dublin Airport Synoptic Station | ",
+                     "Trend: ", round(trend_slope*10, 2), "°C per decade"),
+    x = "Year",
+    y = "Mean Maximum Temperature (°C)",
+    color = "Temp (°C)"
+  ) +
+  annotate("text", x = 1985, y = max(annual_summary$mean_maxtp) - 0.5,
+           label = paste("p-value:", round(trend_p, 4)),
+           size = 3, color = "gray40")
+
+# 2. Seasonal Boxplots
+p2 <- ggplot(df %>% filter(year >= 2000), 
+             aes(x = season, y = maxtp, fill = season)) +
+  geom_boxplot(alpha = 0.8, outlier.alpha = 0.3) +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 3, color = "black") +
+  scale_fill_manual(values = c("#4E79A7", "#59A14F", "#EDC948", "#F28E2B")) +
+  labs(
+    title = "Distribution of Daily Maximum Temperature by Season (2000-2023)",
+    x = "Season",
+    y = "Maximum Temperature (°C)"
+  ) +
+  theme(legend.position = "none")
+
+# 3. Monthly Climate Normals
+monthly_normals <- df %>%
+  group_by(month) %>%
+  summarise(
+    avg_max = mean(maxtp, na.rm = TRUE),
+    avg_min = mean(mintp, na.rm = TRUE),
+    avg_rain = mean(rain, na.rm = TRUE),
+    avg_sun = mean(sun, na.rm = TRUE),
+    .groups = 'drop'
+  )
+
+p3 <- ggplot(monthly_normals) +
+  geom_col(aes(x = month, y = avg_rain), 
+           fill = "#4E79A7", alpha = 0.7, width = 0.7) +
+  geom_line(aes(x = month, y = avg_max * 2), 
+            group = 1, color = "#E15759", size = 1.5) +
+  geom_line(aes(x = month, y = avg_min * 2), 
+            group = 1, color = "#76B7B2", size = 1.5) +
+  scale_y_continuous(
+    name = "Rainfall (mm)",
+    sec.axis = sec_axis(~./2, name = "Temperature (°C)")
+  ) +
+  labs(
+    title = "Monthly Climate Normals: Temperature and Rainfall",
+    subtitle = "Bars: Rainfall | Lines: Maximum (red) and Minimum (teal) Temperature",
+    x = "Month"
+  ) +
+  theme(axis.title.y.right = element_text(color = "#E15759"),
+        axis.title.y.left = element_text(color = "#4E79A7"))
+
+# Combine plots
+seasonal_analysis <- p2 + p3 + plot_layout(ncol = 1)
+print(seasonal_analysis)
+save_plot(seasonal_analysis, "seasonal_analysis.png")
+
+
+
+```
+
+
+
+# Correlation Analaysis
+```{r}
+numeric_df <- df %>% select(where(is.numeric)) %>% select(-year)
+cor_matrix <- cor(numeric_df, use = "pairwise.complete.obs")
+corrplot(cor_matrix, method = "color", type = "upper", tl.col = "black")
+
+
+melted_cormat <- melt(cor_matrix)
+ggplot(melted_cormat, aes(Var1, Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                       midpoint = 0, limit = c(-1,1)) +
+  geom_text(aes(label = round(value, 2))) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+```
+
+# OUTLIER DETECTION
+
+# Temperature and pressure
+```{r}
+# Basic statistics for temperature and pressure
+cat("\n=== BASIC STATISTICS ===\n")
+temp_pressure_stats <- df %>%
+  summarise(
+    # Temperature statistics
+    mean_maxtp = mean(maxtp, na.rm = TRUE),
+    sd_maxtp = sd(maxtp, na.rm = TRUE),
+    mean_mintp = mean(mintp, na.rm = TRUE),
+    mean_daily_temp = mean((mean_maxtp+mean_mintp)/2, na.rm = TRUE),
+    # Pressure statistics
+    mean_cbl = mean(cbl, na.rm = TRUE),
+    sd_cbl = sd(cbl, na.rm = TRUE),
+    min_cbl = min(cbl, na.rm = TRUE),
+    max_cbl = max(cbl, na.rm = TRUE),
+    # Correlation
+    cor_temp_pressure = cor(maxtp, cbl, use = "complete.obs")
+  )
+
+print(temp_pressure_stats)
+
+# Hypothesis 1: Direct relationship between temperature and pressure
+cat("\n=== HYPOTHESIS 1: TEMPERATURE-PRESSURE RELATIONSHIP ===\n")
+cat("Null: No significant correlation between temperature and pressure\n")
+cat("Alternative: Significant correlation exists\n")
+
+# Test correlation
+cor_test <- cor.test(df$maxtp, df$cbl, method = "pearson")
+cat(sprintf("\nPearson Correlation Test:\n"))
+cat(sprintf("  Correlation coefficient (r): %.3f\n", cor_test$estimate))
+cat(sprintf("  95%% Confidence Interval: [%.3f, %.3f]\n", 
+            cor_test$conf.int[1], cor_test$conf.int[2]))
+cat(sprintf("  p-value: %.2e\n", cor_test$p.value))
+
+# Interpret correlation
+if (cor_test$p.value < 0.05) {
+  cat("\n✓ REJECT null hypothesis: Significant correlation found.\n")
+  if (cor_test$estimate > 0) {
+    cat("  Positive correlation: Higher temperatures associated with higher pressure\n")
+  } else {
+    cat("  Negative correlation: Higher temperatures associated with lower pressure\n")
+  }
+} else {
+  cat("\n✗ FAIL to reject null hypothesis: No significant correlation.\n")
+}
+
+# Linear model
+lm_model <- lm(maxtp ~ cbl, data = df)
+cat(sprintf("\nLinear Model: maxtp = %.3f + %.3f * cbl\n", 
+            coef(lm_model)[1], coef(lm_model)[2]))
+cat(sprintf("R-squared: %.3f\n", summary(lm_model)$r.squared))
+
+
+```
+Tests Null Hypotheses rejected, but Negative correlation: Higher temperatures associated with lower pressure. 
+
+
+
+
+# Data Quality
+```{r}
+# Summary for key variables
+key_vars <- c("rain", "maxtp", "mintp", "gmin", "soil", "wdsp", "hg", "sun", "evap")
+summary_stats <- df %>%
+  select(all_of(key_vars)) %>%
+  psych::describe() %>%
+  select(n, mean, sd, min, max, skew, kurtosis)
+print(summary_stats)
+
+```
+
+# TEMPORAL ANALYSIS - Yearly Trends
+```{r}
+ 
+yearly_stats <- df %>%
+  group_by(year) %>%
+  summarise(
+    mean_maxtp = mean(maxtp, na.rm = TRUE),
+    mean_mintp = mean(mintp, na.rm = TRUE),
+    total_rain = sum(rain, na.rm = TRUE),
+    total_sun = sum(sun, na.rm = TRUE),
+    mean_wdsp = mean(wdsp, na.rm = TRUE),
+    max_hg = max(hg, na.rm = TRUE),
+    n_days = n()
+  ) %>%
+  filter(year >= 1999)  # Focus on recent 25 years
+
+# Plot 1: Temperature Trends
+p1 <- ggplot(yearly_stats, aes(x = year)) +
+  geom_line(aes(y = mean_maxtp, color = "Mean Max Temp"), size = 1.2) +
+  geom_line(aes(y = mean_mintp, color = "Mean Min Temp"), size = 1.2) +
+  geom_ribbon(aes(ymin = mean_mintp, ymax = mean_maxtp), 
+              alpha = 0.2, fill = "gray") +
+  scale_color_manual(values = c("Mean Max Temp" = "red", "Mean Min Temp" = "blue")) +
+  labs(title = "Annual Temperature Trends at Dublin Airport",
+       x = "Year", y = "Temperature (°C)",
+       color = "Temperature Type") +
+  theme(legend.position = "top")
+
+# Plot 2: Rainfall Trends
+p2 <- ggplot(yearly_stats, aes(x = year, y = total_rain)) +
+  geom_bar(stat = "identity", fill = "deepskyblue", alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "red", linetype = "dashed") +
+  labs(title = "Annual Total Rainfall",
+       x = "Year", y = "Rainfall (mm)")
+
+# Plot 3: Sunshine Trends
+p3 <- ggplot(yearly_stats, aes(x = year, y = total_sun)) +
+  geom_line(color = "goldenrod", size = 1.2) +
+  geom_smooth(method = "loess", se = FALSE, color = "darkgoldenrod") +
+  labs(title = "Annual Total Sunshine Hours",
+       x = "Year", y = "Sunshine (hours)")
+
+# Plot 4: Wind Speed Trends
+p4 <- ggplot(yearly_stats, aes(x = year)) +
+  geom_line(aes(y = mean_wdsp, color = "Mean Wind Speed"), size = 1.2) +
+  geom_line(aes(y = max_hg, color = "Max Gust (yearly max)"), size = 1, alpha = 0.7) +
+  scale_color_manual(values = c("Mean Wind Speed" = "darkgreen", 
+                               "Max Gust (yearly max)" = "green")) +
+  labs(title = "Wind Speed Trends",
+       x = "Year", y = "Wind Speed (knots)",
+       color = "Wind Type") +
+  theme(legend.position = "top")
+
+# Arrange plots
+grid.arrange(p1, p2, p3, p4, ncol = 2, 
+             top = textGrob("Dublin Airport Weather Trends (25 Years)", 
+                           gp = gpar(fontsize = 16, fontface = "bold")))
+```
+
+```{r}
+
+
+# Save the cleaned dataset
+write.csv(df, "dublin_airport_weather_cleaned.csv", row.names = FALSE)
+cat("\nCleaned dataset saved as 'dublin_airport_weather_cleaned.csv'\n")
+
+```
+
+# Next Steps
+
+```{r}
+cat("1. Handle missing values using imputation or removal\n")
+cat("2. Analyze seasonal patterns and trends\n")
+cat("3. Build weather prediction models\n")
+cat("4. Compare with climate normals\n")
+cat("5. Investigate extreme weather events\n")
+cat("6. Correlate with other environmental factors\n")
+```
+
+
+
+
+
+
+

@@ -1,0 +1,19 @@
+Variable,Description
+date,00_to_00_utc
+rain,Precipitation_Amount_'mm'
+maxtp,"Maximum_Air_Temperature_'C'	__"
+mintp,Minimum__Air_Temperature_'C'
+gmin,Grass_Minimum_Temperature_'C'
+soil,Mean_10cm_Soil_Temperature_'C'
+wdsp,Mean_Wind_Speed_'knot'
+hm                 ,Highest_ten_minute_mean_wind_speed_'knot'
+ddhm,Wind_Direction_at_max_10_min._mean_'deg'
+hg,Highest_Gust_'knot'
+cbl,Mean_CBL_Pressure_'hpa'
+sun,Sunshine_duration_'hours'
+g_rad,Global_Radiation_'j_per_cm_sq.'
+pe,"Potential_Evapotranspiration_'mm'				"
+"evap	","Evaporation_'mm'						"
+smd_wd,"Soil_Moisture_Deficits'mm'_well_drained		"
+smd_md,"Soil_Moisture_Deficits'mm'_moderately_drained	"
+smd_pd,"Soil_Moisture_Deficits'mm'_poorly_drained_	"
