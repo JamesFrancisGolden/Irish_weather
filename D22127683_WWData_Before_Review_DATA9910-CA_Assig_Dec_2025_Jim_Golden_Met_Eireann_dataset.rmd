@@ -1,8 +1,8 @@
 ---
 title: "TU256 Working With Data DATA9910"
 subtitle: "Assignment Specification Continuous Assessment"
-author: "Lucas Rizzo" 
-student: "Jim Golden D22127683"
+author: "TU256" 
+student: "Jim Golden"
 output:
   html:
     self-contained: true
@@ -611,6 +611,7 @@ cat("4. Compare with climate normals\n")
 cat("5. Investigate extreme weather events\n")
 cat("6. Correlate with other environmental factors\n")
 ```
+
 
 
 
